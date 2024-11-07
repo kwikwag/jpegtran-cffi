@@ -3,6 +3,18 @@ import re
 import jpegtran.lib as lib
 
 
+EXIF_ROT_MAP = {
+    90: {1: 8, 8: 3, 3: 6, 6: 1, 2: 7, 7: 4, 4: 5, 5: 2},
+    180: {1: 3, 3: 1, 2: 4, 4: 2, 5: 7, 7: 5, 6: 8, 8: 6},
+    270: {1: 6, 6: 3, 3: 8, 8: 1, 2: 5, 5: 4, 4: 7, 7: 2},
+}
+EXIF_FLIP_MAP = {
+    'horizontal': {1: 2, 2: 1, 3: 4, 4: 3, 5: 6, 6: 5, 7: 8, 8: 7},
+    'vertical': {1: 4, 4: 1, 2: 3, 3: 2, 5: 8, 8: 5, 6: 7, 7: 6},
+}
+EXIF_TRANSPOSE_MAP = {1: 5, 5: 1, 2: 6, 6: 2, 3: 7, 7: 3, 4: 8, 8: 4}
+EXIF_TRANVERSE_MAP = {1: 7, 7: 1, 2: 8, 8: 2, 3: 5, 5: 3, 4: 6, 6: 4}
+
 class JPEGImage(object):
     def __init__(self, fname=None, blob=None):
         """ Initialize the image with either a filename or a string or
@@ -88,39 +100,37 @@ class JPEGImage(object):
         elif orient == 1:
             return self
         elif orient == 2:
-            return self.flip('horizontal')
+            return self.flip('horizontal', with_exif=True)
         elif orient == 3:
-            return self.rotate(180)
+            return self.rotate(180, with_exif=True)
         elif orient == 4:
-            return self.flip('vertical')
+            return self.flip('vertical', with_exif=True)
         elif orient == 5:
-            return self.transpose()
+            return self.transpose(with_exif=True)
         elif orient == 6:
-            return self.rotate(90)
+            return self.rotate(90, with_exif=True)
         elif orient == 7:
-            return self.transverse()
+            return self.transverse(with_exif=True)
         elif orient == 8:
-            return self.rotate(270)
+            return self.rotate(270, with_exif=True)
 
-    def rotate(self, angle):
+    def rotate(self, angle, with_exif=False):
         """ Rotate the image.
 
         :param angle:   rotation angle
-        :type angle:    -90, 90, 180 or 270
         :return:        rotated image
-        :rtype:         jpegtran.JPEGImage
 
         """
-        if angle not in (-90, 90, 180, 270):
-            raise ValueError("Angle must be -90, 90, 180 or 270.")
+        if angle not in (90, 180, 270):
+            raise ValueError("Angle must be 90, 180 or 270.")
+        
         img = JPEGImage(blob=lib.Transformation(self.data).rotate(angle))
-        # Set EXIF orientation to 'Normal' (== no rotation)
-        if img.exif_orientation not in (None, 1):
-            img.exif_orientation = 1
+        if with_exif:
+            img.exif_orientation = EXIF_ROT_MAP[angle][img.exif_orientation or 1]
         img._update_thumbnail()
         return img
 
-    def flip(self, direction):
+    def flip(self, direction, with_exif=False):
         """ Flip the image in horizontal or vertical direction.
 
         :param direction: Flipping direction
@@ -133,10 +143,12 @@ class JPEGImage(object):
             raise ValueError("Direction must be either 'vertical' or "
                              "'horizontal'")
         new = JPEGImage(blob=lib.Transformation(self.data).flip(direction))
+        if with_exif:
+            new.exif_orientation = EXIF_FLIP_MAP[direction][new.exif_orientation or 1]
         new._update_thumbnail()
         return new
 
-    def transpose(self):
+    def transpose(self, with_exif=False):
         """ Transpose the image (across  upper-right -> lower-left axis)
 
         :return:        transposed image
@@ -144,10 +156,12 @@ class JPEGImage(object):
 
         """
         new = JPEGImage(blob=lib.Transformation(self.data).transpose())
+        if with_exif:
+            new.exif_orientation = EXIF_TRANSPOSE_MAP[new.exif_orientation or 1]
         new._update_thumbnail()
         return new
 
-    def transverse(self):
+    def transverse(self, with_exif=False):
         """ Transverse transpose the image (across  upper-left -> lower-right
         axis)
 
@@ -156,6 +170,8 @@ class JPEGImage(object):
 
         """
         new = JPEGImage(blob=lib.Transformation(self.data).transverse())
+        if with_exif:
+            new.exif_orientation = EXIF_TRANVERSE_MAP[new.exif_orientation or 1]
         new._update_thumbnail()
         return new
 

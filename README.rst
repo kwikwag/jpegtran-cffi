@@ -38,7 +38,7 @@ Wand and PIL were too slow to be usable.
 
 Requirements
 ============
-- CPython >=2.7 or >=3.5 or PyPy
+- CPython >=3.5 or PyPy
 - cffi >= 1.0
 - libturbojpeg with headers
 
@@ -67,12 +67,13 @@ Usage
     img = JPEGImage('image.jpg')
 
     # JPEGImage can also be initialized from a bytestring
-    blob = requests.get("http://example.com/image.jpg").content
-    from_blob = JPEGImage(blob=blob)
+    import requests
+    blob = requests.get("http://upload.wikimedia.org/wikipedia/commons/8/82/Mandel_zoom_05_tail_part.jpg").content
+    img = JPEGImage(blob=blob)
 
     # Reading various image parameters
-    print img.width, img.height  # "640 480"
-    print img.exif_orientation  # "1" (= "normal")
+    print(img.width, img.height)  # "600 450"
+    print(img.exif_orientation)  # "2" (= "normal")
 
     # If present, the JFIF thumbnail can be obtained as a bytestring
     thumb = img.exif_thumbnail
@@ -90,12 +91,12 @@ Usage
 
     # jpegtran can transform the image automatically according to the EXIF
     # orientation tag
-    photo = JPEGImage(blob=requests.get("http://example.com/photo.jpg").content)
-    print photo.exif_orientation  # "6" (= 270°)
-    print photo.width, photo.height # "4320 3240"
-    corrected = photo.exif_autotransform()
-    print corrected.exif_orientation  # "1" (= "normal")
-    print corrected.width, corrected.height  # "3240 4320"
+    print(img.exif_orientation)  # "2" (= 270°)
+    print(img.width, img.height) # "600 450"
+    corrected = img.exif_autotransform()
+    print(corrected.exif_orientation)  # "1" (= "normal")
+    print(corrected.width, corrected.height)  # "450 600"
+    corrected.save('corrected.jpg')
 
 
 For more details, refer to the `API Reference`_.

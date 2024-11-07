@@ -1,5 +1,3 @@
-from __future__ import division
-
 import re
 
 import jpegtran.lib as lib
@@ -51,7 +49,7 @@ class JPEGImage(object):
     def exif_thumbnail(self, image):
         if isinstance(image, JPEGImage):
             data = image.data
-        elif isinstance(image, str):
+        elif isinstance(image, bytes):
             data = bytearray(image)
         else:
             data = image

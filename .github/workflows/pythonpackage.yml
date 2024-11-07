@@ -30,18 +30,18 @@ jobs:
 
   build_wheels_windows:
     runs-on: windows-latest
-    # strategy:
-    #   matrix:
-    #     arch:
-    #       - AMD64
-    #       # - x86
+    strategy:
+      matrix:
+        arch:
+          - AMD64
+          # - x86
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: 'true'
     - uses: actions/setup-python@v5
       with:
-        python-version: ${{ matrix.python-version }}
+        python-version: 3.9
     - uses: ilammy/msvc-dev-cmd@v1
       with:
         arch: ${{ matrix.arch }}
@@ -55,13 +55,13 @@ jobs:
         cmake -G"NMake Makefiles" -DCMAKE_BUILD_TYPE=Release ../libjpeg-turbo
         nmake
         cd ..
+        ls binaries
     - name: Build wheels
       uses: pypa/cibuildwheel@v2.21.3
       env:
         # CIBW_SKIP: cp36-* pp*
         CIBW_BUILD: cp39-win_amd64
-        # CIBW_ARCHS_WINDOWS: ${{ matrix.arch }}
-        CIBW_ARCHS_WINDOWS: auto64
+        CIBW_ARCHS_WINDOWS: ${{ matrix.arch }}
         CIBW_BEFORE_BUILD_WINDOWS: "python -m pip install delvewheel"
         CIBW_REPAIR_WHEEL_COMMAND_WINDOWS: "python -m delvewheel repair -w {dest_dir} {wheel} --add-path binaries"
     - uses: actions/upload-artifact@v4
